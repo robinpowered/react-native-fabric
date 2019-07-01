@@ -3,25 +3,59 @@ A React Native library for Fabric, Crashlytics and Answers
 
 [![NPM](https://nodei.co/npm/react-native-fabric.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/react-native-fabric/)
 
+
+## Versioning
+- For React Native > 0.40 use version 0.5.1
+- For React Native < 0.40 use version 0.3.2
+
+For Twitter Kit support, see [react-native-fabric-twitterkit](https://github.com/tkporter/react-native-fabric-twitterkit)
+
 ## Installation
 
-- Set up Fabric / Crashlytics in your app as instructed on [Fabric.io](https://fabric.io)
+### 1. Add Fabric / Crashlytics to your project
 
-### With [rnpm][rnpm]
+- First, set up Fabric / Crashlytics in your app as instructed on [Fabric.io](https://fabric.io).  This includes downloading the fabric app and walking through the setup steps (downloading the SDK, adding it to your project and making some changes to your project).
 
-`rnpm install react-native-fabric`
+### 2. Add react-native-fabric
 
-rnpm will automatically link all the necessary libraries for both iOS and Android.
+#### Automatically
 
-If the rnpm installation goes off without a hitch, you can now skip to the **[Crashlytics Usage section](crashlytics-usage)** or the **[Answers Usage section](answers-usage)**.
+`react-native install react-native-fabric`, or with [rnpm](https://github.com/rnpm/rnpm): `rnpm install react-native-fabric`
 
-### Without [rnpm][rnpm]
+React Native / rnpm will automatically link all the necessary libraries for both iOS and Android.
+
+If the installation goes off without a hitch, you can now skip to the **[Crashlytics Usage section](#crashlytics-usage)** or the **[Answers Usage section](#answers-usage)**.
+
+#### Manually
 
 `npm install react-native-fabric --save`
 
 - Alternatively for Android, if you **don't** use Android studio you can skip the first step and instead follow the steps described in [`Android`](#android) **as well as** the steps in [`Android without Android Studio`](#no_android_studio).
 
-#### iOS
+##### Manually iOS With CocoaPods support
+
+- add the following line to Podfile
+
+`pod 'ReactNativeFabric', :path => '../node_modules/react-native-fabric'`
+
+##### Manually iOS Without CocoaPods support
+
+Download the [Crashlytics
+SDK](https://fabric.io/kits/ios/crashlytics/manual-install) and place the two
+frameworks in a directory called `Crashlytics` in the `ios` directory. You may
+want to add this directory to your `.gitignore` as they take up a decent amount
+of space and will slow down Git.
+
+You will also need to modify the Run Script Phase that you likely added to Build
+Phases so that it points to the correct location for the Fabric framework. If
+you placed the framework directly under `ios/Crashlytics` as specified above,t
+the contents of the script will then be:
+
+```
+"${SRCROOT}/Crashlytics/Fabric.framework/run" API_KEY API_SECRET
+```
+
+Then do the following:
 
 - Open your project in Xcode
 - Run ```open node_modules/react-native-fabric/ios```
@@ -33,7 +67,7 @@ If the rnpm installation goes off without a hitch, you can now skip to the **[Cr
 - ⌘+B
 
 <a name="android"></a>
-#### Android
+##### Android
 
 *Note: Android support requires React Native 0.16 or later 
 
@@ -64,7 +98,7 @@ If the rnpm installation goes off without a hitch, you can now skip to the **[Cr
   }
   ```
 
-* Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+* RN < 0.29 - Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
 
   ```diff
   package com.myapp;
@@ -76,15 +110,34 @@ If the rnpm installation goes off without a hitch, you can now skip to the **[Cr
     @Override
     protected List<ReactPackage> getPackages() {
         return Arrays.<ReactPackage>asList(
-  +         new FabricPackage(this),
+  +         new FabricPackage(),
             new MainReactPackage()
         );
     }
   }
   ```
 
+* RN 0.29+ - Edit your `MainApplication.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+
+  ```diff
+  package com.myapp;
+
+  + import com.smixx.fabric.FabricPackage;
+
+  ....
+  public class MainApplication extends Application implements ReactApplication {
+    @Override
+    protected List<ReactPackage> getPackages() {
+        return Arrays.<ReactPackage>asList(
+  +         new FabricPackage(),
+            new MainReactPackage()
+        );
+    }
+  }
+  ```  
+
 <a name="no_android_studio"></a>
-### Android without Android Studio
+##### Android without Android Studio
 
 Make sure you also follow the steps described in [`Android`](#android).
 
@@ -112,13 +165,13 @@ Make sure you also follow the steps described in [`Android`](#android).
 
   dependencies {
       [...]
-  +     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
+  +     compile('com.crashlytics.sdk.android:crashlytics:2.9.2@aar') {
   +         transitive = true;
   +     }
   }
   ```
 
-* Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+* RN < 0.29 - Edit your `MainActivity.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
 
   ```diff
   + import android.os.Bundle;
@@ -138,6 +191,27 @@ Make sure you also follow the steps described in [`Android`](#android).
   }
   ```
 
+* RN 0.29+ - Edit your `MainApplication.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+
+  ```diff
+  + import com.crashlytics.android.Crashlytics;
+  + import io.fabric.sdk.android.Fabric;
+  
+  public class MainApplication extends Application implements ReactApplication {
+  
+  +   @Override
+  +   public void onCreate() {
+  +       super.onCreate();
+  +       Fabric.with(this, new Crashlytics());
+  +   }
+  
+    [...]
+  
+  }
+  ``` 
+
+* Note: the `onCreate` access privilege goes from `protected` to `public` from RN 0.28+
+
 * Edit your `AndroidManifest.xml` (in `android/app/src/main/`) to look like this. Make sure to enter your fabric API key after `android:value=`, you can find your key on your fabric organisation page.
 
   ```diff
@@ -155,7 +229,10 @@ Make sure you also follow the steps described in [`Android`](#android).
   ```
 
 ## Crashlytics Usage
-To see all available methods take a look at [Crashlytics.js](https://github.com/corymsmith/react-native-fabric/blob/master/Crashlytics.js)
+
+**Note: logging will not be registered on Android to the Fabric dashboard until the app is bundled for release.**
+
+To see all available methods take a look at [Crashlytics.js](https://github.com/corymsmith/react-native-fabric/blob/master/src/Crashlytics.js)
 
 ```js
 var Fabric = require('react-native-fabric');
@@ -175,29 +252,29 @@ Crashlytics.setString('organization', 'Acme. Corp');
 // Forces a native crash for testing
 Crashlytics.crash();
 
-// Record a non-fatal JS error
-Crashlytics.recordError('something went wrong!');
-
 // Due to differences in primitive types between iOS and Android I've exposed a setNumber function vs. setInt, setFloat, setDouble, setLong, etc                                        
 Crashlytics.setNumber('post_count', 5);
 
-// Record a non-fatal JS error on Android
+// Record a non-fatal JS error only on Android
 Crashlytics.logException('');
+
+// Record a non-fatal JS error only on iOS
+Crashlytics.recordError('something went wrong!');
 
 ```
 
 ## Answers Usage
-To see all available function take a look at [Answers.js](https://github.com/corymsmith/react-native-fabric/blob/master/Answers.js)
+To see all available function take a look at [Answers.js](https://github.com/corymsmith/react-native-fabric/blob/master/src/Answers.js)
 
 ```js
 var Fabric = require('react-native-fabric');
 
 var { Answers } = Fabric;
 
-// All log functions take an optional array of custom attributes as the last parameter
+// All log functions take an optional object of custom attributes as the last parameter
 Answers.logCustom('Performed a custom event', { bigData: true });
 
-Answers.logContentView('To-Do Edit', 'To-Do', 'to-do-42', { user-id: 93 });
+Answers.logContentView('To-Do Edit', 'To-Do', 'to-do-42', { userId: 93 });
 
 Answers.logAddToCart(24.50, 'USD', 'Air Jordans', 'shoes', '987654', {color: 'red'});
 
